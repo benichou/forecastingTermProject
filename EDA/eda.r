@@ -14,7 +14,7 @@ load('C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMetho
 
 head(sppdata)
 
-sppData = data.frame(Y=as.matrix(sppdata), date=time(sppdata))
+sppData = data.frame(Y=as.matrix(sppdata), date=time(sppdata)) # transform time series object into an R dataframe
 
 
 # export as a csv
