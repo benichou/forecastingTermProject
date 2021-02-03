@@ -31,7 +31,7 @@ sppData = data.frame(Y=as.matrix(sppdata), date=time(sppdata)) # transform time 
 colNamesList = c(colnames(sppData))
 ourColumns = colNamesList[11:12] ## FEC (target variable) and the time series are at position 11 and 12
 ## limit the sppData dataframe to WFEC (team WFEC) and the time series
-sppData = select(sppData, ourColumns[1], ourColumns[2])
+sppData[c(ourColumns[1], ourColumns[2])]
 head(sppData)
 ## identify whether there are missing values and print message if it the case
 
