@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # EDA for Part 1 of term project
 #
 #
@@ -11,6 +12,8 @@
 #                                                                                     #
 #######################################################################################
 
+=======
+>>>>>>> jiahuiBranch
 #install timeseries package
 
 library(timeSeries)
@@ -36,7 +39,11 @@ head(sppData)
 ## identify whether there are missing values and print message if it the case
 
 if(any(is.na(sppData))){
+<<<<<<< HEAD
 print("There is missing data in the DataFrame")
+=======
+  print("There is missing data in the DataFrame")
+>>>>>>> jiahuiBranch
 }
 ## identify the rows with missing value
 
@@ -80,7 +87,11 @@ sppData[is.na(sppData$Y.WFEC) & as.numeric(sppData$Month == 12), "Y.WFEC"] = ave
 ## check there are no more missing values on Dec 12
 
 if(sum(sppData[is.na(sppData$Y.WFEC) & sppData$Month == 12, "Y.WFEC"]) == 0){
+<<<<<<< HEAD
     print("The missing rows on Dec 12 have been imputed by their average of the 3 previous years")
+=======
+  print("The missing rows on Dec 12 have been imputed by their average of the 3 previous years")
+>>>>>>> jiahuiBranch
 }
 
 sppData[as.numeric(sppData$Year) == 2018 & as.numeric(sppData$Month) == 12 & as.numeric(sppData$Day) == 12, ]
@@ -113,6 +124,7 @@ aggregatedDailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
 # export as a csv
 yourPath = 'C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/aggregatedDailyPeaksWFEC.csv'
 write.csv(aggregatedDailyPeaksWFEC, yourPath, row.names = FALSE)
+<<<<<<< HEAD
 
 
 
@@ -173,6 +185,73 @@ test.ts <- window(demand.ts, start = c(2014,10), end = c(2018,9))
 ggseasonplot(train.ts)
 
 
+=======
+=======
+###################################
+library(timeSeries)
+library(forecast)
+options(digits=3)
+aggregatedDailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
+plot(aggregatedDailyPeaksWFEC)
 
+aggregatedDailyPeaksWFEC_month = aggregate(Y.WFEC ~ sppData$Month, sppData, max)
+plot(aggregatedDailyPeaksWFEC_month)
 
+head(aggregatedDailyPeaksWFEC)
+plot(aggregatedDailyPeaksWFEC)
 
+#transform into ts time series
+aggregatedDailyPeaksWFEC.ts <-ts(aggregatedDailyPeaksWFEC$Y.WFEC,start = c(2013,10),end = c(2018,9),frequency =365)
+plot(aggregatedDailyPeaksWFEC.ts)
+print(aggregatedDailyPeaksWFEC.ts)
+
+# (1) Compute naive/no-change/random walk/persistence forecast
+# First forecast is for Oct 2014
+ffcast <- c(2014,10)
+naive1 <- naive(aggregatedDailyPeaksWFEC.ts, h=1)
+
+# Compute bias, pbias, and MAPE
+#Note that bias1=(-ME) and pbias1=(-MPE)
+accuracy(naive1)
+forecast <- window(naive1$fitted, start=ffcast) 
+observed <- window(naive1$x, start=ffcast)
+#------------------------------------------------
+
+# (2) Compute seasonal naive / seasonal no-change
+# First forecast is for Oct 2014
+ffcastS <- c(2014,10)
+naiveS <- snaive(aggregatedDailyPeaksWFEC.ts, h=1)
+
+# Compute bias, pbias, and MAPE
+#Note that bias1=(-ME) and pbias1=(-MPE)
+accuracy(naiveS)
+forecastS <- window(naiveS$fitted, start=ffcastS)
+observedS <- window(naiveS$x, start=ffcastS)
+#------------------------------------------------
+>>>>>>> jiahuiBranch
+
+# (3) Compute rolling three-month mean
+# First forecast is for Oct 2014
+ffcast3 <- c(2014,10)
+# Calculate three-day mean and store in last of the three days
+naive3t <- zoo::rollmean(aggregatedDailyPeaksWFEC.ts, 3, align="right")
+# Use function naive to move three-day mean forward by one day
+naive3 <- naive(naive3t, h=1)
+
+<<<<<<< HEAD
+=======
+# Compute bias, pbias, and MAPE
+#Note that bias1=(-ME) and pbias1=(-MPE)
+accuracy(naive3)
+forecast3 <- window(naive3$fitted, start=ffcast3)
+observed3 <- window(aggregatedDailyPeaksWFEC.ts, start=ffcast3)
+>>>>>>> jiahuiBranch
+
+# Show observed and forecasts as of Jan 2016
+plot(observedS, ylab="Monthly demand (TWh)")
+lines(forecastS, col="red")
+lines(window(forecast, start=ffcastS), col="blue")
+lines(window(forecast3, start=ffcastS), col="cyan")
+legend("bottomleft", 
+       legend=c("Observed","Naive","Seasonal naive","3-day mean"),
+       col=c("black","blue","red","cyan"), lty=1)
