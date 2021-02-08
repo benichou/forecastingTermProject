@@ -326,6 +326,8 @@ aggregatedDailyPeaksWFEC["Month"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%m"
 aggregatedDailyPeaksWFEC["Day"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%d")
 
 
+## Energy consumption frame + the meteoroligcal data BELOW
+
 
 avgDailyWithMeteoData = merge(aggregatedDailyPeaksWFEC, blanchardStation, by=c("Year", "Month", "Day"), all.x=TRUE) ## left merge to make sure we do not lose any daily peaks 
 ## when we do not have any temperature data ## TODO: Imputation of missing data for modelling phase
@@ -388,4 +390,100 @@ plot(avgDailyWithMeteoData$TOBS, avgDailyWithMeteoData$Y.WFEC, ylab="Evolution o
 dev.off(dev.cur())
 
 ## This helped us see that the temperature of reference for CDD (when cooling starts to be required in a building) might be around 20 degrees
-## This also helped us see that the temperature of reference for HDD (when heating starts to be required in a building) might be around
+## This also helped us see that the temperature of reference for HDD (when heating starts to be required in a building) might be around 0 to 5 degrees
+
+# Let us just compare the different Y.WFEC energy consumption at different temperature level
+
+
+## a reference temperature that should be chosen in an adequate way in
+## order to separate the hot and cold ‘ends’ of the demand-temperature
+
+## Summary statistics about the daily demand
+
+summary(avgDailyWithMeteoData$Y.WFEC)
+
+
+# summary statistics about the daily temperature in WFEC
+summary(avgDailyWithMeteoData$TOBS)
+
+# summary statistics about the daily precipitation levels in WFEC
+summary(avgDailyWithMeteoData$PRCP)
+
+
+
+
+# CDD (Temperature of reference is then 19 degrees for CDD)
+## --> When temp is between 18 and 19, energy consumption is at 1198.274
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >= 18 &
+                      avgDailyWithMeteoData$TOBS <= 19 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+## --> When temp is between 19 and 20, energy consumption is at 1260.899 --> Biggest jump from one increase in celsius degree --> We shall set the Temperature of Reference to 19 degrees for air conditionning and irrigation works possibly
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >= 19 &
+                      avgDailyWithMeteoData$TOBS <= 20 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+## --> When temp is between 20 and 21, energy consumption is at 1281
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >= 20 &
+                      avgDailyWithMeteoData$TOBS <= 21 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+
+
+## HDD (Temperature of reference to know when heating will start inside buildings is different than the one for CDD) --> Tref for HDD is 1 degree
+## --> When temp is between 8 and 9 degrees, energy consumption is at 1015.552
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >=8 &
+                      avgDailyWithMeteoData$TOBS <= 9 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+## --> When temp is between 2 and3, energy consumption is at 1012
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >= 6 &
+                      avgDailyWithMeteoData$TOBS <= 7 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+## --> When temp is between 20 and 21, energy consumption is at 1026 --> constitutes a break in the energy demand/temperature relationship where we can think that heating indoors of the industrial plants and cattle farms start to be required
+mean(avgDailyWithMeteoData[avgDailyWithMeteoData$TOBS >= 5 &
+                      avgDailyWithMeteoData$TOBS <= 6 &
+                      !is.na(avgDailyWithMeteoData$TOBS), c("Y.WFEC")])
+
+
+## Tt is a weighted average of temperature for day t / Tt = (Tmin + Tmax)/2 
+
+avgDailyWithMeteoData["Tt"] = (avgDailyWithMeteoData$TMIN + avgDailyWithMeteoData$TMAX)/2
+
+###########################
+#
+#   HDDt and CDDt creation
+#
+
+trefHDD = 5
+trefCDD = 19
+
+avgDailyWithMeteoData["CDDTref"] = trefCDD
+
+avgDailyWithMeteoData["HDDTref"] = trefHDD
+
+## HDDt HDDt = max (Tref − Tt, 0)
+avgDailyWithMeteoData["HDDt"] = pmax(avgDailyWithMeteoData$HDDTref - avgDailyWithMeteoData$Tt, 0)
+
+## CDDt CDDt = max (Tt − Tref , 0)
+
+avgDailyWithMeteoData["CDDt"] = pmax(avgDailyWithMeteoData$Tt - avgDailyWithMeteoData$CDDTref, 0)
+
+
+## Calculation of the effective temperature
+
+avgDailyWithMeteoData["TetMinus1"] = 0
+
+avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x > as.Date("2011-01-01"), c("TetMinus1")] = avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x >= as.Date("2011-01-01") &
+                                                                                                              avgDailyWithMeteoData$DATE.x < as.Date("2021-01-01") , c("TOBS")]
+
+
+avgDailyWithMeteoData["Tet"] = 0.5* avgDailyWithMeteoData$TOBS +0.5*avgDailyWithMeteoData$TetMinus1
+
+## Try to identify week days, week ends
+
+## Try to identify holidays and days close to holidays
+
+## Also look at the temperature vs demand with week end points and weekday points to check for week end weekday differences
+
