@@ -197,7 +197,7 @@ legend("bottomleft",
 meteoDataPath ='C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/meteoFile.csv' ## from noaa site
 
 meteoData = read.csv(meteoDataPath)
-
+head(meteoData)
 ## We only select the meteorological data of the following stations out of the meteoData frame because the other stations do not cover the entire 2011 2021 period or have too big missing gaps
 
 blanchardStation = meteoData[meteoData['NAME'] == 'BLANCHARD 2 SSW, OK US',  
@@ -319,7 +319,8 @@ blanchardStation["Year"] = strftime(blanchardStation$DATE, "%Y")
 blanchardStation["Month"] = strftime(blanchardStation$DATE, "%m")
 blanchardStation["Day"] = strftime(blanchardStation$DATE, "%d")
 
-
+## rename column to "DATE "
+names(aggregatedDailyPeaksWFEC)[1] = "DATE"
 
 aggregatedDailyPeaksWFEC["Year"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%Y")
 aggregatedDailyPeaksWFEC["Month"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%m")
@@ -332,7 +333,6 @@ aggregatedDailyPeaksWFEC["Day"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%d")
 avgDailyWithMeteoData = merge(aggregatedDailyPeaksWFEC, blanchardStation, by=c("Year", "Month", "Day"), all.x=TRUE) ## left merge to make sure we do not lose any daily peaks 
 ## when we do not have any temperature data ## TODO: Imputation of missing data for modelling phase
 
-head(avgDailyWithMeteoData)
 
 
 ## Identifying Temperature of Reference --> a reference temperature that should be chosen in an adequate way in
@@ -453,7 +453,7 @@ avgDailyWithMeteoData["Tt"] = (avgDailyWithMeteoData$TMIN + avgDailyWithMeteoDat
 
 ###########################
 #
-#   HDDt and CDDt creation
+#   HDDt and CDDt creation + effective temperature column
 #
 
 trefHDD = 5
@@ -471,19 +471,167 @@ avgDailyWithMeteoData["HDDt"] = pmax(avgDailyWithMeteoData$HDDTref - avgDailyWit
 avgDailyWithMeteoData["CDDt"] = pmax(avgDailyWithMeteoData$Tt - avgDailyWithMeteoData$CDDTref, 0)
 
 
-## Calculation of the effective temperature
+## Calculation of the effective temperature column
 
 avgDailyWithMeteoData["TetMinus1"] = 0
 
 avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x > as.Date("2011-01-01"), c("TetMinus1")] = avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x >= as.Date("2011-01-01") &
                                                                                                               avgDailyWithMeteoData$DATE.x < as.Date("2021-01-01") , c("TOBS")]
-
-
 avgDailyWithMeteoData["Tet"] = 0.5* avgDailyWithMeteoData$TOBS +0.5*avgDailyWithMeteoData$TetMinus1
+
+
+## creation of the dummy variables for day of the week
+
+avgDailyWithMeteoData["DayOfWeekRaw"] = as.numeric(strftime(avgDailyWithMeteoData$DATE.x, "%u"))
+
+## 1: Monday (reference)
+## 2: Tuesday 
+## 3: Wednesday
+## 4: Thursday
+## 5: Friday
+## 6: Saturday
+## 7: Sunday
+
+## Monday is reference then no variables for it
+## Tuesday, if day=2 then 1 otherwise 0
+
+avgDailyWithMeteoData["TuesdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 2, 1, 0)
+
+## Wednesday 3 == 1 otherwise 0
+
+avgDailyWithMeteoData["WedneadayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 3, 1, 0)
+
+## Thursday 4 ==1 otherwise 0
+
+avgDailyWithMeteoData["ThursdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 4, 1, 0)
+## Friday 5 ==1 otherwise 0
+
+avgDailyWithMeteoData["FridayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 5, 1, 0)
+
+## Saturday 6 ==1 otherwise 0
+
+avgDailyWithMeteoData["SaturdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 6, 1, 0)
+
+## Saturday 6 ==1 otherwise 0
+
+avgDailyWithMeteoData["SaturdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 6, 1, 0)
+
+## Saturday 6 ==1 otherwise 0
+
+avgDailyWithMeteoData["SundayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 7, 1, 0)
+
+## Transform for further group by plotting the column of dayof week raw into factor for categorical analysis
+
+
+
+## Dummy variable for months of the year , 2 Feb, 3 March .. 12 Dec
+
+avgDailyWithMeteoData["MonthNumeric"] = as.numeric(format(avgDailyWithMeteoData$DATE.x,"%m"))
+avgDailyWithMeteoData["DayNumeric"] = as.numeric(format(avgDailyWithMeteoData$DATE.x,"%d"))
+
+avgDailyWithMeteoData["FebDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 2, 1, 0)
+avgDailyWithMeteoData["MarchDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 3, 1, 0)
+avgDailyWithMeteoData["AprilDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 4, 1, 0)
+avgDailyWithMeteoData["MayDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 5, 1, 0)
+avgDailyWithMeteoData["JuneDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 6, 1, 0)
+avgDailyWithMeteoData["JulyDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 7, 1, 0)
+avgDailyWithMeteoData["AugDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 8, 1, 0)
+avgDailyWithMeteoData["SepDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 9, 1, 0)
+avgDailyWithMeteoData["OctDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 10, 1, 0)
+avgDailyWithMeteoData["NovDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 11, 1, 0)
+avgDailyWithMeteoData["DecDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 12, 1, 0)
+
+head(avgDailyWithMeteoData)
+
+
+## List of Public Holidays in Oklahoma, Texas, and Kansas, and NM
+
+
+## New Year's Day	Fri., Jan. 1, 2021
+## Martin Luther King Jr. Day	Mon., Jan. 18, 2021
+## Washington's Birthday	Mon., Feb. 15, 2021
+## Memorial Day	Mon., May 31, 2021
+## Independence Day	Mon., Jul. 5, 2021
+## Labor Day	Mon., Sep. 6, 2021
+## Veterans Day	Thu., Nov. 11, 2021
+## Thanksgiving	Thu., Nov. 25, 2021
+## Christmas Eve	Fri., Dec. 24, 2021
+## Christmas Day	Fri., Dec. 25, 2021
+## New Year's Day	Fri., Dec. 31, 
+avgDailyWithMeteoData["Public Holidays"] = 0
+
+avgDailyWithMeteoData[(avgDailyWithMeteoData$DayNumeric == 1 & avgDailyWithMeteoData$MonthNumeric == 1) |
+                      (avgDailyWithMeteoData$DayNumeric == 18 & avgDailyWithMeteoData$MonthNumeric == 1) |
+                      (avgDailyWithMeteoData$DayNumeric == 15 & avgDailyWithMeteoData$MonthNumeric == 2) |
+                      (avgDailyWithMeteoData$DayNumeric == 31 & avgDailyWithMeteoData$MonthNumeric == 5) |
+                      (avgDailyWithMeteoData$DayNumeric == 5 & avgDailyWithMeteoData$MonthNumeric == 7) |
+                      (avgDailyWithMeteoData$DayNumeric == 6 & avgDailyWithMeteoData$MonthNumeric == 9) |
+                      (avgDailyWithMeteoData$DayNumeric == 11 & avgDailyWithMeteoData$MonthNumeric == 11) |
+                      (avgDailyWithMeteoData$DayNumeric == 25 & avgDailyWithMeteoData$MonthNumeric == 11) |
+                      (avgDailyWithMeteoData$DayNumeric == 24 & avgDailyWithMeteoData$MonthNumeric == 12) |
+                      (avgDailyWithMeteoData$DayNumeric == 25 & avgDailyWithMeteoData$MonthNumeric == 12), c("Public Holidays")] = 1
+
+
+
+
+## List of Days following public (fixed holidays)
+
+avgDailyWithMeteoData["Days Following Public Holidays"] = 0
+
+
+avgDailyWithMeteoData[(avgDailyWithMeteoData$DayNumeric == 2 & avgDailyWithMeteoData$MonthNumeric == 1) |
+                      (avgDailyWithMeteoData$DayNumeric == 19 & avgDailyWithMeteoData$MonthNumeric == 1) |
+                      (avgDailyWithMeteoData$DayNumeric == 16 & avgDailyWithMeteoData$MonthNumeric == 2) |
+                      (avgDailyWithMeteoData$DayNumeric == 1 & avgDailyWithMeteoData$MonthNumeric == 6) |
+                      (avgDailyWithMeteoData$DayNumeric == 6 & avgDailyWithMeteoData$MonthNumeric == 7) |
+                      (avgDailyWithMeteoData$DayNumeric == 7 & avgDailyWithMeteoData$MonthNumeric == 9) |
+                      (avgDailyWithMeteoData$DayNumeric == 12 & avgDailyWithMeteoData$MonthNumeric == 11) |
+                      (avgDailyWithMeteoData$DayNumeric == 26 & avgDailyWithMeteoData$MonthNumeric == 11) |
+                      (avgDailyWithMeteoData$DayNumeric == 25 & avgDailyWithMeteoData$MonthNumeric == 12) |
+                      (avgDailyWithMeteoData$DayNumeric == 26 & avgDailyWithMeteoData$MonthNumeric == 12), c("Days Following Public Holidays")] = 1
+
+
+
+
+
+## List of religious holidays. We focus on christian holidays given the relative domination of christianity in this rural belt state
+
+
+
+
+
+
+
+
+
+## check for the impact of temperature on demand
+
+## do the same thing with effective temperature
+
+
+
+## see if there is an effect of the HDD and CDD, and with lags too
+
+
 
 ## Try to identify week days, week ends
 
 ## Try to identify holidays and days close to holidays
 
 ## Also look at the temperature vs demand with week end points and weekday points to check for week end weekday differences
+
+## do the same thing with the precipiation levels
+
+
+## plot one year only and check for weekend and weekday differences
+
+## plot each year, month by month
+
+
+
+
+
+
+
+
 
