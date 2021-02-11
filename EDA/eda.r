@@ -6,7 +6,7 @@ library(timeDate)
 # library(dplyr)
 
 # load the R data
-filePath = '~/data/sppdata.rdata'
+filePath = 'data/sppdata.rdata'
 load(filePath)
 head(sppdata)
 
@@ -115,32 +115,6 @@ write.csv(aggregatedDailyPeaksWFEC, yourPath, row.names = FALSE)
 
 
 
-# (3) Compute rolling three-month mean
-# First forecast is for Oct 2014
-ffcast3 <- c(2014,10)
-# Calculate three-day mean and store in last of the three days
-naive3t <- zoo::rollmean(aggregatedDailyPeaksWFEC.ts, 3, align="right")
-# Use function naive to move three-day mean forward by one day
-naive3 <- naive(naive3t, h=1)
-
-# Compute bias, pbias, and MAPE
-#Note that bias1=(-ME) and pbias1=(-MPE)
-accuracy(naive3)
-forecast3 <- window(naive3$fitted, start=ffcast3)
-observed3 <- window(aggregatedDailyPeaksWFEC.ts, start=ffcast3)
-
-# Show observed and forecasts as of Jan 2016
-plot(observedS, ylab="Monthly demand (TWh)")
-lines(forecastS, col="red")
-lines(window(forecast, start=ffcastS), col="blue")
-lines(window(forecast3, start=ffcastS), col="cyan")
-legend("bottomleft", 
-       legend=c("Observed","Naive","Seasonal naive","3-day mean"),
-       col=c("black","blue","red","cyan"), lty=1)
-
-
-
-
 ################################################################################
 #                                                                              #
 #                Data Exploration Y vs Explanatory variables                   #
@@ -154,12 +128,12 @@ legend("bottomleft",
 ## of the temperature per station and their associated territories (based on the energy size consumption of each territory)
 
 
-meteoDataPath ='C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/meteoFile.csv' ## from noaa site
+meteoDataPath ='data/meteoFile.csv' ## from noaa site
 
 meteoData = read.csv(meteoDataPath)
 head(meteoData)
 
-oilDataPath ='C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/oilData.csv' ## from https://www.eia.gov/dnav/pet/hist/RWTCD.htm
+oilDataPath ='data/oilData.csv' ## from https://www.eia.gov/dnav/pet/hist/RWTCD.htm
 
 oilData = read.csv(oilDataPath)
 head(oilData)
