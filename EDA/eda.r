@@ -112,48 +112,8 @@ aggregatedDailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
 # export as a csv
 yourPath = 'C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/aggregatedDailyPeaksWFEC.csv'
 write.csv(aggregatedDailyPeaksWFEC, yourPath, row.names = FALSE)
-=======
-###################################
-library(timeSeries)
-library(forecast)
-options(digits=3)
-aggregatedDailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
-plot(aggregatedDailyPeaksWFEC)
 
-aggregatedDailyPeaksWFEC_month = aggregate(Y.WFEC ~ sppData$Month, sppData, max)
-plot(aggregatedDailyPeaksWFEC_month)
 
-head(aggregatedDailyPeaksWFEC)
-plot(aggregatedDailyPeaksWFEC)
-
-#transform into ts time series
-aggregatedDailyPeaksWFEC.ts <-ts(aggregatedDailyPeaksWFEC$Y.WFEC,start = c(2013,10),end = c(2018,9),frequency =365)
-plot(aggregatedDailyPeaksWFEC.ts)
-print(aggregatedDailyPeaksWFEC.ts)
-
-# (1) Compute naive/no-change/random walk/persistence forecast
-# First forecast is for Oct 2014
-ffcast <- c(2014,10)
-naive1 <- naive(aggregatedDailyPeaksWFEC.ts, h=1)
-
-# Compute bias, pbias, and MAPE
-#Note that bias1=(-ME) and pbias1=(-MPE)
-accuracy(naive1)
-forecast <- window(naive1$fitted, start=ffcast) 
-observed <- window(naive1$x, start=ffcast)
-#------------------------------------------------
-
-# (2) Compute seasonal naive / seasonal no-change
-# First forecast is for Oct 2014
-ffcastS <- c(2014,10)
-naiveS <- snaive(aggregatedDailyPeaksWFEC.ts, h=1)
-
-# Compute bias, pbias, and MAPE
-#Note that bias1=(-ME) and pbias1=(-MPE)
-accuracy(naiveS)
-forecastS <- window(naiveS$fitted, start=ffcastS)
-observedS <- window(naiveS$x, start=ffcastS)
-#------------------------------------------------
 
 # (3) Compute rolling three-month mean
 # First forecast is for Oct 2014
@@ -198,6 +158,19 @@ meteoDataPath ='C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/foreca
 
 meteoData = read.csv(meteoDataPath)
 head(meteoData)
+
+oilDataPath ='C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/oilData.csv' ## from https://www.eia.gov/dnav/pet/hist/RWTCD.htm
+
+oilData = read.csv(oilDataPath)
+head(oilData)
+names(oilData)[1] ="DATE"
+names(oilData)[2] ="OilPrice"
+oilData$DATE = format(as.POSIXct(oilData$DATE, format = '%m/%d/%Y'),format = '%Y-%m-%d') 
+oilData["Year"] = strftime(oilData$DATE, "%Y")
+oilData["Month"] = strftime(oilData$DATE, "%m")
+oilData["Day"] = strftime(oilData$DATE, "%d")
+
+
 ## We only select the meteorological data of the following stations out of the meteoData frame because the other stations do not cover the entire 2011 2021 period or have too big missing gaps
 
 blanchardStation = meteoData[meteoData['NAME'] == 'BLANCHARD 2 SSW, OK US',  
@@ -309,9 +282,6 @@ dev.off(dev.cur())
 
 
 
-
-
-
 ## create a table that group by stats of temperature average, std, min, max
 
 # summary stats for Tobs in the stations
@@ -357,6 +327,9 @@ aggregatedDailyPeaksWFEC["Day"] = strftime(aggregatedDailyPeaksWFEC$DATE, "%d")
 
 avgDailyWithMeteoData = merge(aggregatedDailyPeaksWFEC, blanchardStation, by=c("Year", "Month", "Day"), all.x=TRUE) ## left merge to make sure we do not lose any daily peaks 
 ## when we do not have any temperature data ## TODO: Imputation of missing data for modelling phase
+names(avgDailyWithMeteoData)[4] = "DATE"
+## merge with the Oil Data TOO!
+avgDailyWithMeteoData = merge(avgDailyWithMeteoData, oilData, by=c("Year", "Month", "Day"), all.x=TRUE) ## left merge to make sure we do not lose any daily peaks 
 
 
 
@@ -414,11 +387,7 @@ plot(avgDailyWithMeteoData$TOBS,
      ylab="Evolution of the Demand in function of the Temperature", 
      type="l", 
      main="What temperatures drive the energy consumption in WFEC?") ## Follow same trend but we do not have enough data
-plot(avgDailyWithMeteoData$TOBS, 
-     avgDailyWithMeteoData$Y.WFEC, 
-     ylab="Evolution of the Demand in function of the Temperature", 
-     type="p", 
-     main="What temperatures drive the energy consumption in WFEC?") ## Follow same trend but we do not have enough data
+
 
 dev.off(dev.cur())
 
@@ -435,13 +404,15 @@ dev.off(dev.cur())
 
 summary(avgDailyWithMeteoData$Y.WFEC)
 
-
 # summary statistics about the daily temperature in WFEC
 summary(avgDailyWithMeteoData$TOBS)
 
 # summary statistics about the daily precipitation levels in WFEC
 summary(avgDailyWithMeteoData$PRCP)
 
+## summary statistics about the daily oil price
+
+summary(avgDailyWithMeteoData$OilPrice)
 
 
 
@@ -493,24 +464,47 @@ trefHDD = 5
 trefCDD = 20
 
 avgDailyWithMeteoData["CDDTref"] = trefCDD
-
 avgDailyWithMeteoData["HDDTref"] = trefHDD
 
 ## HDDt HDDt = max (Tref − TempWeighted, 0)
 avgDailyWithMeteoData["HDDt"] = pmax(avgDailyWithMeteoData$HDDTref - avgDailyWithMeteoData$TempWeighted, 0)
-
 ## CDDt CDDt = max (TempWeighted − Tref , 0)
-
 avgDailyWithMeteoData["CDDt"] = pmax(avgDailyWithMeteoData$TempWeighted - avgDailyWithMeteoData$CDDTref, 0)
 
 
 ## Calculation of the effective temperature column
 
 avgDailyWithMeteoData["TetMinus1"] = 0
-
 avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x > as.Date("2011-01-01"), c("TetMinus1")] = avgDailyWithMeteoData[avgDailyWithMeteoData$DATE.x >= as.Date("2011-01-01") &
                                                                                                               avgDailyWithMeteoData$DATE.x < as.Date("2021-01-01") , c("TOBS")] # backshift
 avgDailyWithMeteoData["effectiveTemp"] = 0.5* avgDailyWithMeteoData$TOBS +0.5*avgDailyWithMeteoData$TetMinus1 ## series for effective temperature
+
+
+## Binning
+avgDailyWithMeteoData["effectiveTemperatureCategory"] = 0
+# Very Cold
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] <= -10, c("effectiveTemperatureCategory")] = "A/ Very Cold (<=-10)"
+# Cold
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] > -10 &
+                      avgDailyWithMeteoData["effectiveTemp"] <=0, c("effectiveTemperatureCategory")] = "B/ Cold (-10 to 0)"
+# Little cold
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] > 0 &
+                      avgDailyWithMeteoData["effectiveTemp"] <=10, c("effectiveTemperatureCategory")] = "C/ Little Cold (0 to 10)"
+## Mild
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] > 10 &
+                      avgDailyWithMeteoData["effectiveTemp"] <= 20, c("effectiveTemperatureCategory")] = "D/ Mild (10 to 20)"
+
+## Hot
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] > 20 &
+                      avgDailyWithMeteoData["effectiveTemp"] <= 30, c("effectiveTemperatureCategory")] = "E/ Hot (20 to 30)"
+## Very Hot
+avgDailyWithMeteoData[!is.na(avgDailyWithMeteoData["effectiveTemp"]) & 
+                      avgDailyWithMeteoData["effectiveTemp"] > 30, c("effectiveTemperatureCategory")] = "F/ Very Hot (More than 30)"
 
 
 ## creation of the dummy variables for day of the week
@@ -529,34 +523,22 @@ avgDailyWithMeteoData["DayOfWeekRaw"] = as.numeric(strftime(avgDailyWithMeteoDat
 ## Tuesday, if day=2 then 1 otherwise 0
 
 avgDailyWithMeteoData["TuesdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 2, 1, 0)
-
 ## Wednesday 3 == 1 otherwise 0
-
 avgDailyWithMeteoData["WedneadayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 3, 1, 0)
-
 ## Thursday 4 ==1 otherwise 0
-
 avgDailyWithMeteoData["ThursdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 4, 1, 0)
 ## Friday 5 ==1 otherwise 0
-
 avgDailyWithMeteoData["FridayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 5, 1, 0)
-
 ## Saturday 6 ==1 otherwise 0
-
 avgDailyWithMeteoData["SaturdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 6, 1, 0)
-
 ## Saturday 6 ==1 otherwise 0
-
 avgDailyWithMeteoData["SaturdayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 6, 1, 0)
-
 ## Saturday 6 ==1 otherwise 0
-
 avgDailyWithMeteoData["SundayDummy"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"]  == 7, 1, 0)
 
 ## create week end week day indicator
 
 avgDailyWithMeteoData["WeekEndIndicator"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"] == 7 , 1, 0)
-
 avgDailyWithMeteoData["WeekEndIndicator"] = ifelse(avgDailyWithMeteoData["DayOfWeekRaw"] == 6 , 1, 0)
 
 
@@ -586,25 +568,17 @@ avgDailyWithMeteoData["NovDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]
 avgDailyWithMeteoData["DecDummy"] = ifelse(avgDailyWithMeteoData["MonthNumeric"]  == 12, 1, 0)
 
 
+
 ## check for the impact of effective temperature on demand
 
 
 pdf("EDA/viz/tempExploration.pdf")
 
-plot(avgDailyWithMeteoData$effectiveTemp, 
-     avgDailyWithMeteoData$Y.WFEC, 
-     ylab="Energy Demand", 
-     type="p", 
-     main="Demand vs Effective Temperature")
 
-plot(avgDailyWithMeteoData$TempWeighted, 
-     avgDailyWithMeteoData$Y.WFEC, 
-     ylab="Energy Demand", 
-     type="p", 
-     main="Demand vs Min Max Temperature")
-
-     
-
+boxplot(Y.WFEC~ effectiveTemperatureCategory, 
+          data=avgDailyWithMeteoData[avgDailyWithMeteoData["effectiveTemperatureCategory"] != 0, 
+        c("effectiveTemperatureCategory", "Y.WFEC")], 
+        main="What effectivet emperatures drive the energy consumption in WFEC?")
 
 
 # Create time series for mean temperature, heating degree days 
@@ -617,7 +591,6 @@ Yt = timeSeries(avgDailyWithMeteoData$Y.WFEC, avgDailyWithMeteoData$DATE.x, form
 Prcp = timeSeries(avgDailyWithMeteoData$PRCP, avgDailyWithMeteoData$DATE.x, format="%Y-%m-%d")
 
 # Is there a CDD or HDD effect with demand?
-par(mfrow=c(3,2))
 plot(series(CDDt), series(Yt),
      ylab="daily demand in WFEC", xlab="CDD", pch=23)
 plot(series(HDDt), series(Yt),
@@ -629,26 +602,30 @@ plot(lag(HDDt,1), series(Yt),
 plot(lag(HDDt,2), series(Yt), 
       xlab="lag-2 HDDt",ylab="daily demand in WFEC")
 
-
 # Is there a lagged CDD effect?
 plot(lag(CDDt,1), series(Yt), 
       xlab="lag-1 CDDt",ylab="daily demand in WFEC")
 plot(lag(CDDt,2), series(Yt), 
       xlab="lag-2 CDDt",ylab="daily demand in WFEC")
 
-
-Teffective
-
-
+## Is there a precipitation effect?
 plot(series(Prcp), series(Yt),
      ylab="daily demand in WFEC", xlab="Precipitation levels", pch=23)
 
+## lagged precipitation effect?
+plot(lag(Prcp,1), series(Yt), 
+      xlab="lag-1 CDDt",ylab="daily demand in WFEC")
+plot(lag(Prcp,2), series(Yt), 
+      xlab="lag-2 CDDt",ylab="daily demand in WFEC")
 
-
+## Is there a weigted average temperature effect?
 plot(series(TweigtedTemp), series(Yt),
-     ylab="daily demand in WFEC", xlab="Precipitation levels", pch=23)
+     ylab="daily demand in WFEC", xlab="Weigted Temperature average", pch=23)
 
+## Is there an effective temperature effect?
 
+plot(series(Teffective), series(Yt),
+     ylab="daily demand in WFEC", xlab="Effective Temperature levels", pch=23)
 
 # Day of the week effect?
 # Need to create a variable that contains the corresponding 
@@ -672,10 +649,7 @@ boxplot(Y.WFEC~ Holidays, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC")],
 boxplot(Y.WFEC~ WeekEndIndicator + MonthNumeric, data=avgDailyWithMeteoData[, c("WeekEndIndicator", "MonthNumeric", "Y.WFEC")], main="Demand During WeekDays Vs Week Ends", ylab="Energy Demand in WFEC")
 
 
-boxplot(Y.WFEC~ Holidays, data=avgDailyWithMeteoData[avgDailyWithMeteoData, c("Holidays", "Y.WFEC")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
-
-
-
+boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[avgDailyWithMeteoData, c("Holidays", "Y.WFEC")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
 
 year1 = series(window(DailyPeaksWFEC,
                 start=timeDate("2011-01-01", format="%Y-%m-%d"),
@@ -704,44 +678,90 @@ legend("bottomleft", legend=c("2011","2012", "2013", "2014"),
        lty=c(1,2), col=c("blue", "green", "red", "black"))
 
 
+year1 = series(window(DailyPeaksWFEC,
+                start=timeDate("2015-01-01", format="%Y-%m-%d"),
+                end=timeDate("2015-12-31", format="%Y-%m-%d")))
+year2 = series(window(DailyPeaksWFEC,
+                start=timeDate("2016-01-01", format="%Y-%m-%d"),
+                end=timeDate("2016-12-31", format="%Y-%m-%d")))
+year3 = series(window(DailyPeaksWFEC,
+                start=timeDate("2017-01-01", format="%Y-%m-%d"),
+                end=timeDate("2017-12-31", format="%Y-%m-%d")))
 
-## plot the different month of the year 
+year4 = series(window(DailyPeaksWFEC,
+                start=timeDate("2018-01-01", format="%Y-%m-%d"),
+                end=timeDate("2018-12-31", format="%Y-%m-%d")))
+
+
+plot(year1, axes=F,
+     lty=1, type="l",
+     ylab="Ontario hourly demand (in MW)", xlab="", col="blue")
+lines(year2, lty=3, lwd=1.8,col="green")
+lines(year3, lty=3, lwd=1.8, col="red")
+lines(year4, lty=3, lwd=1.8, col="black")
+axis(1, at =seq(0,31*11+30, by=31),
+     labels=c("Jan","Feb","Mar","Apr","May","June","July", 
+               "Aug", "Sep", "Oct", "Nov", "Dec"))
+legend("bottomleft", legend=c("2015","2016", "2017","2018"), 
+       lty=c(1,2), col=c("blue", "green", "red", "black"))
 
 
 
+year1 = series(window(DailyPeaksWFEC,
+                start=timeDate("2019-01-01", format="%Y-%m-%d"),
+                end=timeDate("2019-12-31", format="%Y-%m-%d")))
+year2 = series(window(DailyPeaksWFEC,
+                start=timeDate("2020-01-01", format="%Y-%m-%d"),
+                end=timeDate("2020-12-31", format="%Y-%m-%d")))
+plot(year1, axes=F,
+     lty=1, type="l",
+     ylab="Ontario hourly demand (in MW)", xlab="", col="blue")
+lines(year2, lty=3, lwd=1.8,col="green")
+axis(1, at =seq(0,31*11+30, by=31),
+     labels=c("Jan","Feb","Mar","Apr","May","June","July", 
+               "Aug", "Sep", "Oct", "Nov", "Dec"))
+legend("bottomleft", legend=c("2019","2020"), 
+       lty=c(1,2), col=c("blue", "green", "red", "black"))
 
 
 
 dev.off(dev.cur())
 
 
+pdf("EDA/viz/oilPriceOnDemand.pdf")
 
 
 
+plot(avgDailyWithMeteoData$OilPrice, 
+     avgDailyWithMeteoData$Y.WFEC, 
+     ylab="Energy Demand", 
+     type="p", 
+     main="Demand vs Effective Temperature", 
+     col = "green")
+
+
+plot(lag(avgDailyWithMeteoData$OilPrice, 1), 
+     avgDailyWithMeteoData$Y.WFEC, 
+     ylab="Energy Demand", 
+     type="p", 
+     main="Demand vs Effective Temperature", 
+     col = "red")
 
 
 
+dev.off(dev.cur())
 
 
+pdf("EDA/viz/oilPriceVariation.pdf")
 
 
+oilPriceSeries = timeSeries(oilData$OilPrice[oilData$DATE > as.Date("2011-01-01")], 
+                          oilData$DATE[oilData$DATE > as.Date("2011-01-01")], format="%Y-%m-%d")
+plot(oilPriceSeries, 
+     ylab="Gas Price", 
+     type="l", 
+     main="Evolution of the Gas Price as an Economic and Electricity Benchmark since 2011", 
+     col = "red") ## same usual trend in terms of temperature
 
 
-## Try to identify week days, week ends
-
-
-## do the same thing with the precipiation levels
-
-
-## plot one year only and check for weekend and weekday differences
-
-## plot each year, month by month
-
-
-
-
-
-
-
-
-
+dev.off(dev.cur())
