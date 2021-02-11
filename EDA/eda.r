@@ -6,7 +6,7 @@ library(timeDate)
 # library(dplyr)
 
 # load the R data
-filePath = 'C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/sppdata.rdata'
+filePath = '~/data/sppdata.rdata'
 load(filePath)
 head(sppdata)
 
@@ -110,7 +110,7 @@ aggregatedDailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
 
 
 # export as a csv
-yourPath = 'C:/Users/franc/Documents/HEC_MONTREAL/COURSES/2020/winter/forecastingMethods/termProject/aggregatedDailyPeaksWFEC.csv'
+yourPath = 'data/aggregatedDailyPeaksWFEC.csv'
 write.csv(aggregatedDailyPeaksWFEC, yourPath, row.names = FALSE)
 
 
