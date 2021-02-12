@@ -132,61 +132,32 @@ write.csv(dailyPeaksWFEC, yourPath, row.names = FALSE)
 #                                                             # 
 #                                                             #
 ###############################################################
-
-
-
-dailyWFEC <- timeSeries(dailyPeaksWFEC$Y.WFEC, 
-                        dailyPeaksWFEC$`sppData$Date`,
-                         format="%Y-%m-%d")
-
-
-sppData$AggMonth = format(as.Date(sppData$Date), "%Y-%m")
-aggMonthlyWFEC = aggregate(Y.WFEC ~ sppData$AggMonth, sppData, max)
-monthTime = paste(aggMonthlyWFEC$`sppData$AggMonth`,"-01",sep="")
-monthlyWFEC = timeSeries(aggMonthlyWFEC$Y.WFEC,
-                              monthTime,
-                              format="%Y-%m-%d")
-
-
-
-aggYearlyWFEC = aggregate(Y.WFEC ~ sppData$Year, sppData, max)
-yearTime = paste(aggYearlyWFEC$`sppData$Year`,"-01","-01",sep="")
-yearlyWFEC = timeSeries(aggYearlyWFEC$Y.WFEC,
-                        yearTime,
-                        format="%Y-%m-%d")
-
-
-
 pdf("viz/WFEC_differencing.pdf")
+
+DailyPeaksWFEC <- timeSeries(dailyPeaksWFEC$Y.WFEC, 
+                             dailyPeaksWFEC$`sppData$Date`,
+                             format="%Y-%m-%d")
 
 
 
 par(mfrow=c(2,1))
-plot(dailyWFEC, col="grey", ylab="WFEC daily max demand (in MW)")
-lines(time(dailyWFEC), 
-      supsmu(as.numeric(time(dailyWFEC)), dailyWFEC)$y, 
-      col="red")
-abline(b=0, a=mean(dailyWFEC), col="blue")
-
-
-
-MMdiff <- diff(monthlyWFEC, 1)
-plot(MMdiff, 
+plot(DailyPeaksWFEC, 
      col="grey", 
-     ylab="Monthly differences of daily demand")
+     ylab="WFEC daily max demand (in MW)")
+lines(time(DailyPeaksWFEC), 
+      supsmu(as.numeric(time(DailyPeaksWFEC)), 
+             DailyPeaksWFEC)$y, col="red")
+abline(b=0, a=mean(DailyPeaksWFEC), col="blue")
 
-lines(time(MMdiff)[-(1:1)],
-      supsmu(as.numeric(time(MMdiff)), MMdiff)$y, 
-      col="red")
 
 
-
-lag12MMdiff <- diff(monthlyWFEC, 12)
-plot(lag12MMdiff, 
+lag365diff <- diff(DailyPeaksWFEC, 365)
+plot(lag365diff, 
      col="grey", 
-     ylab="lag 12 differences of Month demand")
-lines(time(lag12MMdiff)[-(1:12)],
-     supsmu(as.numeric(time(lag12MMdiff)),lag12MMdiff)$y, col="red")
+     ylab="lag 365 differences of daily demand")
+lines(time(lag365diff)[-(1:365)],
+      supsmu(as.numeric(time(lag365diff)), lag365diff)$y, col="red")
+
 
 
 dev.off(dev.cur())
