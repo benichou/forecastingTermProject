@@ -623,7 +623,7 @@ boxplot(Y.WFEC~ Holidays, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC")],
 boxplot(Y.WFEC~ WeekEndIndicator + MonthNumeric, data=avgDailyWithMeteoData[, c("WeekEndIndicator", "MonthNumeric", "Y.WFEC")], main="Demand During WeekDays Vs Week Ends", ylab="Energy Demand in WFEC")
 
 
-boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
+boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[, c("Holidays", "MonthNumeric", "Y.WFEC")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
 
 year1 = series(window(DailyPeaksWFEC,
                 start=timeDate("2011-01-01", format="%Y-%m-%d"),
