@@ -5,7 +5,7 @@ library(timeDate)
 
 
 # load the R data
-filePath = '../data/sppdata.rdata'
+filePath = 'data/sppdata.rdata'
 load(filePath)
 head(sppdata)
 
@@ -123,7 +123,7 @@ dailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date,
 
 
 # export as a csv
-yourPath = '../data/dailyPeaksWFEC.csv'
+yourPath = 'data/dailyPeaksWFEC.csv'
 write.csv(dailyPeaksWFEC, yourPath, row.names = FALSE)
 
 ###############################################################
@@ -176,13 +176,13 @@ dev.off(dev.cur())
 # per station and their associated territories, 
 # based on the energy size consumption of each territory.
 
-meteoPath ='../data/meteoFile.csv' ## from noaa site
+meteoPath ='data/meteoFile.csv' ## from noaa site
 
 meteo = read.csv(meteoPath)
 head(meteo)
 
 # oil data from https://www.eia.gov/dnav/pet/hist/RWTCD.htm
-oilDataPath ='../data/oilData.csv' 
+oilDataPath ='data/oilData.csv' 
 
 oilData = read.csv(oilDataPath)
 head(oilData)

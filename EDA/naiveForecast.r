@@ -8,11 +8,15 @@
 library(timeSeries)
 library(forecast)
 options(digits=3)
-source('eda.r')
-dailyPeaksWFEC = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
-plot(dailyPeaksWFEC)
+source('EDA/eda.r')
 
-head(dailyPeaksWFEC)
+
+
+dailyPeakPath ='data/dailyPeaksWFEC.csv' ## from noaa site
+
+dailyPeaksWFEC = read.csv(dailyPeakPath)
+
+ 
 
 
 
@@ -59,7 +63,7 @@ observedS_0 <- window(naiveS_0$x, start=ffcastS_0)
 
 # (3) Compute rolling three-day mean
 # First forecast is for Jan 2017
-ffcast3_0 <- c(2017,1,1)
+ffcast3_0 <- c(2017,1)
 # Calculate three-day mean and store in last of the three days
 naive3t_0 <- zoo::rollmean(dailyPeaksWFEC_0.ts, 3, align="right")
 # Use function naive to move three-day mean forward by one day
@@ -94,7 +98,7 @@ print(accuracy(naive3_0))
 
 ####### Test Data Set########
 #transform into ts time series
-dailyPeaksWFEC.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2015,1),end = c(2021,2),frequency =365)
+dailyPeaksWFEC.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2016,1),end = c(2021,2),frequency =365)
 plot(dailyPeaksWFEC.ts)
 head(dailyPeaksWFEC.ts)
 
