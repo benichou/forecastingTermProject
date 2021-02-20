@@ -23,7 +23,9 @@ dailyPeaksWFEC = read.csv(dailyPeakPath)
 
 ####### Validation Data Set########
 #transform into ts time series
-dailyPeaksWFEC_0.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2015,12),end = c(2018,12),frequency =365)
+dailyPeaksWFEC_0.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2015,12),
+                                              end = c(2018,12),
+                                              frequency =365)
 plot(dailyPeaksWFEC_0.ts)
 head(dailyPeaksWFEC_0.ts)
 
@@ -98,7 +100,9 @@ print(accuracy(naive3_0))
 
 ####### Test Data Set########
 #transform into ts time series
-dailyPeaksWFEC.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2016,1),end = c(2021,2),frequency =365)
+dailyPeaksWFEC.ts <-ts(dailyPeaksWFEC$Y.WFEC,start = c(2016,1),
+                                             end = c(2021,2),
+                                             frequency =365)
 plot(dailyPeaksWFEC.ts)
 head(dailyPeaksWFEC.ts)
 

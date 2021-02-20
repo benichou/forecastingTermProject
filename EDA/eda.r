@@ -241,11 +241,17 @@ meteoViz[meteoViz['NAME']==stList[5],c("NAME")] = "Tipton Station"
 
 
 pdf("viz/tempAcrossStations.pdf")
-
-<<<<<<< HEAD
-boxplot(TOBS~ NAME, data=filteredMeteoDataViz[, c("NAME", "TOBS")], xlab=" Weather Stations",
-                    names = c("Blanchard Station", "Cherokee Station", "Clovis Station", "Seminole Station", "Tipton Station"), xaxs = FALSE, main="Temmperature Distribution in Weather Stations")  ## The box plot disctibutions of the different stations across the WFEC territories are similar
-=======
+## The box plot disctibutions of the different stations across the WFEC territories are similar
+boxplot(TOBS~ NAME, data=filteredMeteoDataViz[, 
+                                             c("NAME", "TOBS")], 
+                                             xlab=" Weather Stations",
+                                             names = c("Blanchard Station", 
+                                             "Cherokee Station", 
+                                             "Clovis Station", 
+                                             "Seminole Station", 
+                                             "Tipton Station"), 
+                                             xaxs = FALSE, 
+            main="Temmperature Distribution in Weather Stations")  
 # The box plot disctibutions of the different stations 
 # across the WFEC territories are similar
 boxplot(TOBS~ NAME, data=meteoViz[, c("NAME", "TOBS")], 
@@ -254,7 +260,6 @@ boxplot(TOBS~ NAME, data=meteoViz[, c("NAME", "TOBS")],
                               "Clovis Station", 
                               "Seminole Station", 
                               "Tipton Station"), xaxs = FALSE)
->>>>>>> lihuaBranch
 
 tempStations = c(blanchardSt$TOBS, 
                  clovisNMSt$TOBS, 
@@ -272,12 +277,8 @@ tempSeriesAll = timeSeries(tempStations,
 
 plot(tempSeriesAll, 
      ylab="Evolution of the Temperature in Celsius", 
-<<<<<<< HEAD
-     main="Evolution of Temperature For All Weather Stations") 
-=======
      main="Evolution of Temperature over 2011 to 2021 
            in OK, NM, KS, and NM For All Weather Stations") 
->>>>>>> lihuaBranch
 
 plot(tempSeriesAll, 
      ylab="Evolution of the Temperature in Celsius", 
@@ -479,14 +480,8 @@ boxplot(Y.WFEC~ TemperatureCategory,
 plot(avgWithMeteo$TOBS, 
      avgWithMeteo$Y.WFEC, 
      ylab="Evolution of the Demand in function of the Temperature", 
-<<<<<<< HEAD
-     type="p", 
-     col="blue",
-     main="What temperatures drive the energy consumption in WFEC?") ## Follow same trend but we do not have enough data
-=======
      type="l", 
      main="What temperatures drive the energy consumption in WFEC?") 
->>>>>>> lihuaBranch
 
 
 dev.off(dev.cur())
@@ -780,18 +775,12 @@ plot(series(Prcp), series(Yt),
 
 ## lagged precipitation effect?
 plot(lag(Prcp,1), series(Yt), 
-<<<<<<< HEAD
-      xlab="lag-1 PRCP",ylab="daily demand in WFEC")
-plot(lag(Prcp,2), series(Yt), 
-      xlab="lag-2 PRCP",ylab="daily demand in WFEC")
-=======
      xlab="lag-1 CDDt",
      ylab="daily demand in WFEC")
 
 plot(lag(Prcp,2), series(Yt), 
       xlab="lag-2 CDDt",
      ylab="daily demand in WFEC")
->>>>>>> lihuaBranch
 
 # Is there a weigted average temperature effect?
 plot(series(TweigtedTemp), series(Yt),
@@ -843,16 +832,12 @@ boxplot(Y.WFEC~ WeekEndInd + MonthNum,
         ylab="Energy Demand in WFEC")
 
 
-<<<<<<< HEAD
 boxplot(Y.WFEC~ Holidays + MonthNum, 
         data=avgWithMeteo[, c("Holidays", 
                               "Y.WFEC", 
                               "MonthNum")], 
         main="Demand During Normal Days vs Holidays Across Months", 
         ylab="Energy Demand in WFEC")
-=======
-boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC", "MonthNumeric")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
->>>>>>> develop
 
 year1 = series(window(DailyPeaksWFEC,
                 start=timeDate("2011-01-01", format="%Y-%m-%d"),
