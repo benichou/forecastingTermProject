@@ -189,8 +189,8 @@ filteredMeteoDataViz[filteredMeteoDataViz['NAME'] == 'TIPTON 4 S, OK US', c("NAM
 pdf("EDA/viz/tempAcrossStations.pdf")
 
 
-boxplot(TOBS~ NAME, data=filteredMeteoDataViz[, c("NAME", "TOBS")], 
-                    names = c("Blanchard Station", "Cherokee Station", "Clovis Station", "Seminole Station", "Tipton Station"), xaxs = FALSE)  ## The box plot disctibutions of the different stations across the WFEC territories are similar
+boxplot(TOBS~ NAME, data=filteredMeteoDataViz[, c("NAME", "TOBS")], xlab=" Weather Stations",
+                    names = c("Blanchard Station", "Cherokee Station", "Clovis Station", "Seminole Station", "Tipton Station"), xaxs = FALSE, main="Temmperature Distribution in Weather Stations")  ## The box plot disctibutions of the different stations across the WFEC territories are similar
 
 tempStations = c(blanchardStation$TOBS, 
                  clovisNewMexicoStation$TOBS, 
@@ -206,7 +206,7 @@ tempSeriesAll = timeSeries(tempStations, datesStations, format="%Y-%m-%d")
 
 plot(tempSeriesAll, 
      ylab="Evolution of the Temperature in Celsius", 
-     main="Evolution of Temperature over 2011 to 2021 in OK, NM, KS, and NM For All Weather Stations") 
+     main="Evolution of Temperature For All Weather Stations") 
 
 plot(tempSeriesAll, 
      ylab="Evolution of the Temperature in Celsius", 
@@ -359,7 +359,8 @@ boxplot(Y.WFEC~ TemperatureCategory, data=avgDailyWithMeteoData[avgDailyWithMete
 plot(avgDailyWithMeteoData$TOBS, 
      avgDailyWithMeteoData$Y.WFEC, 
      ylab="Evolution of the Demand in function of the Temperature", 
-     type="l", 
+     type="p", 
+     col="blue",
      main="What temperatures drive the energy consumption in WFEC?") ## Follow same trend but we do not have enough data
 
 
@@ -588,9 +589,9 @@ plot(series(Prcp), series(Yt),
 
 ## lagged precipitation effect?
 plot(lag(Prcp,1), series(Yt), 
-      xlab="lag-1 CDDt",ylab="daily demand in WFEC")
+      xlab="lag-1 PRCP",ylab="daily demand in WFEC")
 plot(lag(Prcp,2), series(Yt), 
-      xlab="lag-2 CDDt",ylab="daily demand in WFEC")
+      xlab="lag-2 PRCP",ylab="daily demand in WFEC")
 
 ## Is there a weigted average temperature effect?
 plot(series(TweigtedTemp), series(Yt),
@@ -623,7 +624,7 @@ boxplot(Y.WFEC~ Holidays, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC")],
 boxplot(Y.WFEC~ WeekEndIndicator + MonthNumeric, data=avgDailyWithMeteoData[, c("WeekEndIndicator", "MonthNumeric", "Y.WFEC")], main="Demand During WeekDays Vs Week Ends", ylab="Energy Demand in WFEC")
 
 
-boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[avgDailyWithMeteoData, c("Holidays", "Y.WFEC")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
+boxplot(Y.WFEC~ Holidays + MonthNumeric, data=avgDailyWithMeteoData[, c("Holidays", "Y.WFEC", "MonthNumeric")], main="Demand During Normal Days vs Holidays Across Months", ylab="Energy Demand in WFEC")
 
 year1 = series(window(DailyPeaksWFEC,
                 start=timeDate("2011-01-01", format="%Y-%m-%d"),
