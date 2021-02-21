@@ -19,6 +19,16 @@ Go to an R interactive console
 
 
 
+## Franck TODO
+1. Discover approximately when the shale gas revolution really started
+in the USA --> good information to justify splits in the data
+2. Weekly trends in R naive and snaive
+3. imputation of the missing values with the previous hours on 
+the same day
+4. find oil and gas data for the week end too or just carry over
+Friday to week end too
+5. Find new proxy information too
+
 
 
 
