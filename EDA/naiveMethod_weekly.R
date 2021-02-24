@@ -52,10 +52,16 @@ ffcastN <- c(1,2)
 #------------------
 naiveTrain <- naive(train.ts, h=1)
 
+fcastTrain <- window(naiveTrain$fitted, start=ffcastN) 
+obsTrain <- window(naiveTrain$x, start=ffcastN)
+
 #------------------
 # Validation set
 #------------------
 naiveValidate <- naive(validateN.ts, h=1)
+
+fcastVal <- window(naiveValidate$fitted, start=ffcastN) 
+obsVal <- window(naiveValidate$x, start=ffcastN)
 
 #==========================================================
 # (2) Seasonal Naive forecast (one week before)
@@ -69,10 +75,16 @@ ffcastSN <- c(2,1)
 #------------------
 naiveSTrain <- snaive(train.ts, h=1)
 
+fcastSTrain <- window(naiveSTrain$fitted, start=ffcastSN) 
+obsSTrain <- window(naiveSTrain$x, start=ffcastSN)
+
 #------------------
 # Validation set
 #------------------
 naiveSValidate <- snaive(validateSN.ts, h=1)
+
+fcastSVal <- window(naiveSValidate$fitted, start=ffcastSN) 
+obsSVal <- window(naiveSValidate$x, start=ffcastSN)
 
 #==========================================================
 # (3) Moving Average forecast (rolling three-day mean)
@@ -87,6 +99,9 @@ naive3tTrain <- zoo::rollmean(train.ts, 3, align="right")
 # Use function naive to move three-day mean forward by one day
 naive3Train <- naive(naive3tTrain, h=1)
 
+fcastMATrain <- window(naive3Train$fitted, start=ffcastMA) 
+obsMATrain <- window(train.ts, start=ffcastMA)
+
 #------------------
 # Validation set
 #------------------
@@ -94,6 +109,9 @@ naive3Train <- naive(naive3tTrain, h=1)
 naive3tVal <- zoo::rollmean(validateMA.ts, 3, align="right")
 # Use function naive to move three-day mean forward by one day
 naive3Validate <- naive(naive3tVal, h=1)
+
+fcastMAVal <- window(naive3Validate$fitted, start=ffcastMA)
+obsMAVal <- window(validateMA.ts, start=ffcastMA)
 
 
 #******************************************************************
