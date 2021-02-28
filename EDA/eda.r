@@ -241,11 +241,12 @@ meteoViz[meteoViz['NAME']==stList[5],c("NAME")] = "Tipton Station"
 
 
 pdf("viz/tempAcrossStations.pdf")
-## The box plot disctibutions of the different stations across the WFEC territories are similar
+## The box plot disctibutions of the different stations across 
+# the WFEC territories are similar
 boxplot(TOBS~ NAME, data=filteredMeteoDataViz[, 
-                                             c("NAME", "TOBS")], 
-                                             xlab=" Weather Stations",
-                                             names = c("Blanchard Station", 
+                                      c("NAME", "TOBS")], 
+                                      xlab=" Weather Stations",
+                                      names = c("Blanchard Station", 
                                              "Cherokee Station", 
                                              "Clovis Station", 
                                              "Seminole Station", 
@@ -474,7 +475,7 @@ pdf("viz/visualizingTRefForCoolingAndHeating.pdf")
 boxplot(Y.WFEC~ TemperatureCategory, 
         data=avgWithMeteo[avgWithMeteo["TemperatureCategory"] != 0, 
                           c("TemperatureCategory", "Y.WFEC")], 
-        main="What temperatures drive the energy consumption in WFEC?")
+     main="What temperatures drive the energy consumption in WFEC?")
 
 # Follow same trend but we do not have enough data
 plot(avgWithMeteo$TOBS, 
@@ -677,10 +678,10 @@ DailyPeaksWFEC <- timeSeries(dfHolidays$Y.WFEC,
                              dfHolidays$`sppData$Date`,
                              format="%Y-%m-%d")
 
-avgWithMeteo["Holidays"] = as.numeric(isHoliday(time(DailyPeaksWFEC)))
+avgWithMeteo["Holidays"] =as.numeric(isHoliday(time(DailyPeaksWFEC)))
 
 
-avgWithMeteo["MonthNum"] = as.numeric(format(avgWithMeteo$DATE.x,"%m"))
+avgWithMeteo["MonthNum"] =as.numeric(format(avgWithMeteo$DATE.x,"%m"))
 avgWithMeteo["DayCategory"] = weekdays(as.Date(avgWithMeteo$DATE.x))
 
 avgWithMeteo["FebDummy"] = ifelse(avgWithMeteo["MonthNum"]==2, 1, 0)
