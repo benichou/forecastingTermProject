@@ -17,6 +17,7 @@ pdf("naiveMethod.pdf")
 # Removing February 29 (2012/02/29, 2016/02/29 & 2020/02/29)
 # to facilitate annual seasonality (frequency = 365)
 WFEC365 <- dailyPeaksWFEC[-c(425,1886,3347),]
+rownames(WFEC365) <- WFEC365$DATE # to make sure the index is dates
 
 # Create 'ts' time series as required by 'naive' and 'snaive'
 WFEC365.ts <- ts(WFEC365$Y.WFEC, start=c(2011,1), frequency=365)
@@ -51,7 +52,7 @@ obsSY <- window(naiveSY$x, start=ffcastN, end=lfcastN)
 # Weekly seasonality
 # snaive automatically uses a weekly seasonality when 
 # ts is built specifying frequency=7.
-ffcastWK <- c(2,1)
+ffcastWK <- c(2,1) # start predictions on second week first day
 naiveSW <- snaive(validateWK.ts, h=1)
 fcastSW <- window(naiveSW$fitted, start=ffcastWK) 
 obsSW <- window(naiveSW$x, start=ffcastWK)
