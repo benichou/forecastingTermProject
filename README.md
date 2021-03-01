@@ -17,6 +17,11 @@ Go to an R interactive console
 4. https://www.macrotrends.net/2562/us-crude-oil-production-historical-chart : us crude oil production information charts
 5. https://www.eia.gov/naturalgas/data.php shale gas 202101
 
+## Meteo Data Source
+
+- Nooia
+- Mesonet for Oklhaoma:
+http://www.mesonet.org/index.php/weather/daily_data_retrieval
 
 
 ## What are the different shale gas basins in the WFEC territory?
@@ -49,14 +54,11 @@ increased too
 Source: https://www.naturalgasintel.com/information-about-the-oklahoma-liquids-plays/
 
 ## Franck TODO
-1. Discover approximately when the shale gas revolution really started
-in the USA --> good information to justify splits in the data
+
 2. Weekly trends in R naive and snaive
-3. imputation of the missing values with the previous hours on 
-the same day
-4. find oil and gas data for the week end too or just carry over
-Friday to week end too
-5. Find new proxy information too
+
+
+
 
 
 

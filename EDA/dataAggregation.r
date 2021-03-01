@@ -205,8 +205,9 @@ oilDataProductionPath ='data/oilProductionDailyUS.csv'
 
 oilDataProduction = read.csv(oilDataProductionPath)
 
+names(oilDataProduction)[1] = "DATE"
 
-oilDataProduction$DATE = oilDataProduction[,'ï..DATE']
+oilDataProduction$DATE = oilDataProduction[,'DATE']
 
 oilDataProduction["Year"] = strftime(oilDataProduction$DATE, "%Y")
 oilDataProduction["Month"] = strftime(oilDataProduction$DATE, "%m")
@@ -225,7 +226,9 @@ monthlyOilAndGasInfo ='data/monthlyOilAndGasInfo.csv'
 
 monthlyOil = read.csv(monthlyOilAndGasInfo)
 
-monthlyOil$DATE = monthlyOil[,'ï..Date']
+names(monthlyOil)[1] = "DATE"
+
+monthlyOil$DATE = monthlyOil[,'DATE']
 
 monthlyOil["Year"] = strftime(monthlyOil$DATE, "%Y")
 monthlyOil["Month"] = strftime(monthlyOil$DATE, "%m")
@@ -274,18 +277,143 @@ finalDf = merge(df,
 finalDf = finalDf[order(as.Date(finalDf$DATE, format="%Y/%m/%d")),]
 
 
+# temperature weighted by min max
+TempWeighted = (avgWithMeteo$TMIN + avgWithMeteo$TMAX)/2
+finalDf["TempWeighted"] = TempWeighted 
+
+###########################
+#
+#   HDDt and CDDt creation + effective temperature column
+#
+
+trefHDD = 5
+trefCDD = 20
+
+finalDf["CDDTref"] = trefCDD
+finalDf["HDDTref"] = trefHDD
+
+# HDDt HDDt = max (Tref − TempWeighted, 0)
+HDD = pmax(finalDf$HDDTref - finalDf$TempWeighted, 0)
+finalDf["HDDt"] = HDD
+
+# CDDt CDDt = max (TempWeighted − Tref , 0)
+CDDT = pmax(finalDf$TempWeighted - finalDf$CDDTref, 0)
+finalDf["CDDt"] = CDDT
 
 
+## Calculation of the effective temperature column
+
+finalDf["TetMinus1"] = 0
+TetMinus1 = finalDf[finalDf$DATE.x>=as.Date("2011-01-01") &
+                         finalDf$DATE.x<as.Date("2021-01-01"), 
+                         c("TOBS")] 
+# backshift
+finalDf[finalDf$DATE.x > as.Date("2011-01-01"), 
+             c("TetMinus1")] = TetMinus1 
+
+# series for effective temperature
+effectiveTemp = 0.5* finalDf$TOBS +0.5*finalDf$TetMinus1 
+finalDf["effectiveTemp"] = effectiveTemp
 
 
+## Binning
+finalDf["effectTempCategory"] = 0
+# Very Cold
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] <= -10, 
+             c("effectTempCategory")] = 1
+# Cold
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] > -10 &
+             finalDf["effectiveTemp"] <=0, 
+             c("effectTempCategory")] = 2
+# Little cold
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] > 0 &
+             finalDf["effectiveTemp"] <=10, 
+             c("effectTempCategory")] = 3
+## Mild
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] > 10 &
+             finalDf["effectiveTemp"] <= 20, 
+             c("effectTempCategory")] = 4
+
+## Hot
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] > 20 &
+             finalDf["effectiveTemp"] <= 30, 
+             c("effectTempCategory")] = 5
+## Very Hot
+finalDf[!is.na(finalDf["effectiveTemp"]) & 
+             finalDf["effectiveTemp"] > 30, 
+             c("effectTempCategory")] = 6
 
 
+dfHolidays = aggregate(Y.WFEC ~ sppData$Date, sppData, max)
+
+DailyPeaksWFEC <- timeSeries(dfHolidays$Y.WFEC,
+                             dfHolidays$`sppData$Date`,
+                             format="%Y-%m-%d")
+
+finalDf["Holidays"] =as.numeric(isHoliday(time(DailyPeaksWFEC), 
+                                          "UnitedStates"))
 
 
+# Day of the week effect?
+# Need to create a variable that contains the corresponding 
+# 'day of the week' for each date and plot the demand against
+# the day to 'see' if there is possibly an effect.
+dayofweek <- substr(weekdays(finalDf$DATE,), 1, 3)
+dow <- ifelse(dayofweek=="Sun", 7, 
+       ifelse(dayofweek=="Mon", 1,
+       ifelse(dayofweek=="Tue", 2, 
+       ifelse(dayofweek=="Wed", 3,
+       ifelse(dayofweek=="Thu", 4, 
+       ifelse(dayofweek=="Fri", 5, 6))))))
+
+finalDf['Day of Week'] = dow
+
+finalDf['WeekendIdentifier'] = ifelse(finalDf['Day of Week']== 1, 0, 
+       ifelse(finalDf['Day of Week']== 2, 0,
+       ifelse(finalDf['Day of Week']== 3, 0,
+       ifelse(finalDf['Day of Week']== 4, 0,
+       ifelse(finalDf['Day of Week']== 5, 0, 
+       ifelse(finalDf['Day of Week']== 6, 1,
+       ifelse(finalDf['Day of Week']== 7, 1, 0
+       )))))))
+
+## The tables below show there is a 
+
+weeklyEffectPeriod1 = aggregate(finalDf[1:1000, 'Y.WFEC'], 
+list(finalDf[1:1000, 'Day of Week']), mean)
+
+names(weeklyEffectPeriod1)[1] = "Day Id"
+names(weeklyEffectPeriod1)[2] = "Electricity Demand"
+
+weeklyEffectPeriod2 = aggregate(finalDf[1000:2000, 'Y.WFEC'], 
+list(finalDf[1000:2000, 'Day of Week']), mean)
+names(weeklyEffectPeriod2)[1] = "Day Id"
+names(weeklyEffectPeriod2)[2] = "Electricity Demand"
+
+weeklyEffectPeriod3 = aggregate(finalDf[2000:3364, 'Y.WFEC'], 
+list(finalDf[2000:3364, 'Day of Week']), mean)
+names(weeklyEffectPeriod3)[1] = "Day Id"
+names(weeklyEffectPeriod3)[2] = "Electricity Demand"
 
 
+boxplot(Y.WFEC~ Holidays, 
+        data=finalDf[2000:3364, c("Holidays", "Y.WFEC")], 
+        main="Demand During Normal Days vs Holidays", 
+        ylab="Energy Demand in WFEC")
 
-
+boxplot(Y.WFEC~ Holidays, 
+        data=finalDf[1000:2000, c("Holidays", "Y.WFEC")], 
+        main="Demand During Normal Days vs Holidays", 
+        ylab="Energy Demand in WFEC")
+boxplot(Y.WFEC~ Holidays, 
+        data=finalDf[1:1000, c("Holidays", "Y.WFEC")], 
+        main="Demand During Normal Days vs Holidays", 
+        ylab="Energy Demand in WFEC")
 
 
 yourPath = 'data/finalDf.csv'

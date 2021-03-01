@@ -5,11 +5,11 @@
 library(timeSeries)
 library(forecast)
 options(digits=3)
-source('dataAggregation.r')
+source('EDA/dataAggregation.r')
 
 pdf("naiveMethod.pdf")
 
-# Training set  : 2011/01/01-2016/12/31
+# Training set  : 2014/01/01-2016/12/31
 # Validation set: 2017/01/01-2018/12/31
 # Test set      : 2019/01/01-2020/12/31
 # Naive method does not require training
