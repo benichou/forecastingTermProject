@@ -243,6 +243,24 @@ names(df)[4] = "DATE"
 
 ## drop unnecessary columns
 
+## merge tornado count into 
+
+tornadoCount ='data/tornadoCount.csv' 
+
+tornadoData = read.csv(tornadoCount)
+
+names(tornadoData)[1] = "DATE"
+
+tornadoData["Year"] = strftime(tornadoData$DATE, "%Y")
+tornadoData["Month"] = strftime(tornadoData$DATE, "%m")
+
+df = merge(df, 
+                     tornadoData, 
+                     by=c("Year", "Month"), 
+                     all.x=TRUE) 
+
+names(df)[4] = "DATE"
+
 drops = c("DATE.y", "ï..Date", 
           "DATE.y", "ï..DATE", 
           "DATE.x", "DATE.y")
@@ -415,6 +433,7 @@ boxplot(Y.WFEC~ Holidays,
         main="Demand During Normal Days vs Holidays", 
         ylab="Energy Demand in WFEC")
 
+df = df[order(as.Date(df$DATE, format="%Y/%m/%d")),]
 
 yourPath = 'data/finalDf.csv'
 write.csv(finalDf, yourPath, row.names = FALSE)
