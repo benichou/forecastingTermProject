@@ -4,7 +4,7 @@
 
 library(timeSeries)
 library(forecast)
-options(digits=4)
+options(digits=3)
 source('dataAggregation.r')
 
 # Training set  : 2014/01/01-2016/12/31
